@@ -1,0 +1,12 @@
+{
+  "templateId": "template1",
+  "description": "Data Extraction Template - Private Equity Funds",
+  "fields": [
+    { "key": "number", "header": "#" },
+    { "key": "tab", "header": "Tab" },
+    { "key": "description", "header": "Description" }
+  ]
+}
+
+
+
