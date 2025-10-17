@@ -1,7 +1,8 @@
 from typing import Any, Dict, List
 import os
 import time
-import pandas as pd
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 from .templates import get_template_field_order, get_template_headers
 from ..settings import get_output_dir
 
@@ -21,11 +22,6 @@ def write_excel(data_rows: List[Dict[str, Any]], template: Dict[str, Any]) -> st
         fields = get_template_field_order(template)
         headers = get_template_headers(template)
         rows = [[row.get(k, "") for k in fields] for row in data_rows]
-        df = pd.DataFrame(rows, columns=headers)
-        
-        # Add header row for both template1 and template2
-        from openpyxl import Workbook
-        from openpyxl.styles import Font, PatternFill, Alignment
         
         # Create a new workbook
         wb = Workbook()
@@ -65,38 +61,38 @@ def write_excel(data_rows: List[Dict[str, Any]], template: Dict[str, Any]) -> st
 
 def write_multi_sheet_excel(data_rows: List[Dict[str, Any]], template: Dict[str, Any], out_path: str) -> None:
     """Write Excel file with multiple sheets based on template structure."""
-    with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
-        sheets = template.get("sheets", [])
+    wb = Workbook()
+    # Remove default sheet
+    wb.remove(wb.active)
+    
+    sheets = template.get("sheets", [])
+    
+    for sheet_config in sheets:
+        sheet_name = sheet_config.get("name", "Sheet")
+        fields = [field["key"] for field in sheet_config.get("fields", [])]
+        headers = [field["header"] for field in sheet_config.get("fields", [])]
         
-        for sheet_config in sheets:
-            sheet_name = sheet_config.get("name", "Sheet")
-            fields = [field["key"] for field in sheet_config.get("fields", [])]
-            headers = [field["header"] for field in sheet_config.get("fields", [])]
-            
-            # Create sheet data - include all rows but only with fields for this sheet
-            sheet_data = []
-            for row in data_rows:
-                sheet_row = {}
-                for field in fields:
-                    sheet_row[field] = row.get(field, "")
-                sheet_data.append(sheet_row)
-            
-            # If no data rows, create empty sheet with headers
-            if not sheet_data:
-                sheet_data = [{}]
-            
-            # Create DataFrame for this sheet
-            rows = [[row.get(k, "") for k in fields] for row in sheet_data]
-            df = pd.DataFrame(rows, columns=headers)
-            
-            # Write to Excel sheet
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-            
-            # Add description as a comment or note (if possible)
-            description = sheet_config.get("description", "")
-            if description:
-                # For now, we'll add the description as the first row
-                # In a more advanced implementation, we could add it as a comment
-                pass
+        # Create new worksheet
+        ws = wb.create_sheet(title=sheet_name)
+        
+        # Add headers
+        for col_idx, header in enumerate(headers, 1):
+            ws.cell(row=1, column=col_idx, value=header)
+        
+        # Add data rows
+        for row_idx, row_data in enumerate(data_rows, 2):
+            for col_idx, field in enumerate(fields, 1):
+                value = row_data.get(field, "")
+                ws.cell(row=row_idx, column=col_idx, value=value)
+        
+        # Add description as a comment or note (if possible)
+        description = sheet_config.get("description", "")
+        if description:
+            # For now, we'll add the description as the first row
+            # In a more advanced implementation, we could add it as a comment
+            pass
+    
+    # Save the workbook
+    wb.save(out_path)
 
 
