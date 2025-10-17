@@ -7,6 +7,7 @@ from ..services.pdf_extractor import extract_text_from_pdf
 from ..services.llm_extract import extract_structured_data
 from ..services.excel_writer import write_excel
 from ..services.templates import load_template
+from .download import store_file_in_memory
 
 router = APIRouter()
 
@@ -34,7 +35,11 @@ async def extract(files: List[UploadFile] = File(...), template_id: str = Form(.
             # For other templates, extend as before
             rows.extend(structured_rows)
 
-    filename = write_excel(rows, template)
+    filename, file_content = write_excel(rows, template)
+    
+    # Store file in memory for serverless environments
+    store_file_in_memory(filename, file_content)
+    
     return JSONResponse({"filename": filename})
 
 

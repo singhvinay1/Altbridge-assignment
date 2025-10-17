@@ -1,30 +1,32 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 import os
 import time
+import io
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from .templates import get_template_field_order, get_template_headers
 from ..settings import get_output_dir
 
 
-def write_excel(data_rows: List[Dict[str, Any]], template: Dict[str, Any]) -> str:
+def write_excel(data_rows: List[Dict[str, Any]], template: Dict[str, Any]) -> Tuple[str, bytes]:
     template_id = template.get("templateId", "template")
     ts = time.strftime("%Y%m%d_%H%M%S")
     filename = f"extracted_data_{template_id}_{ts}.xlsx"
     out_dir = get_output_dir()
     out_path = os.path.join(out_dir, filename)
     
+    # Create workbook in memory
+    wb = Workbook()
+    
     # Check if template supports multi-sheet structure
     if template.get("multiSheet", False) and "sheets" in template:
-        write_multi_sheet_excel(data_rows, template, out_path)
+        write_multi_sheet_excel_to_workbook(data_rows, template, wb)
     else:
         # Legacy single-sheet format with header
         fields = get_template_field_order(template)
         headers = get_template_headers(template)
         rows = [[row.get(k, "") for k in fields] for row in data_rows]
         
-        # Create a new workbook
-        wb = Workbook()
         ws = wb.active
         ws.title = "Sheet1"
         
@@ -52,16 +54,24 @@ def write_excel(data_rows: List[Dict[str, Any]], template: Dict[str, Any]) -> st
         for row_idx, row_data in enumerate(rows, 3):
             for col_idx, value in enumerate(row_data, 1):
                 ws.cell(row=row_idx, column=col_idx, value=value)
-        
-        # Save the workbook
-        wb.save(out_path)
     
-    return filename
+    # Save to memory buffer
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    file_content = buffer.getvalue()
+    
+    # Also save to disk for local development
+    try:
+        wb.save(out_path)
+    except Exception:
+        pass  # Ignore file system errors in serverless environments
+    
+    return filename, file_content
 
 
-def write_multi_sheet_excel(data_rows: List[Dict[str, Any]], template: Dict[str, Any], out_path: str) -> None:
+def write_multi_sheet_excel_to_workbook(data_rows: List[Dict[str, Any]], template: Dict[str, Any], wb: Workbook) -> None:
     """Write Excel file with multiple sheets based on template structure."""
-    wb = Workbook()
     # Remove default sheet
     wb.remove(wb.active)
     
@@ -91,8 +101,5 @@ def write_multi_sheet_excel(data_rows: List[Dict[str, Any]], template: Dict[str,
             # For now, we'll add the description as the first row
             # In a more advanced implementation, we could add it as a comment
             pass
-    
-    # Save the workbook
-    wb.save(out_path)
 
 
