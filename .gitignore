@@ -312,3 +312,5 @@ config.json
 generated/
 build/
 dist/
+
+.vercel
