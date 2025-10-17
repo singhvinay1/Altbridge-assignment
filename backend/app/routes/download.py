@@ -12,9 +12,13 @@ file_storage = {}
 
 @router.get("/download/{filename}")
 async def download(filename: str):
+    print(f"Download request for: {filename}")  # Debug log
+    print(f"Files in memory: {list(file_storage.keys())}")  # Debug log
+    
     # First try to get from in-memory storage (for serverless)
     if filename in file_storage:
         file_content = file_storage[filename]
+        print(f"Serving file {filename} from memory ({len(file_content)} bytes)")  # Debug log
         return StreamingResponse(
             io.BytesIO(file_content),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -33,6 +37,7 @@ async def download(filename: str):
 def store_file_in_memory(filename: str, file_content: bytes):
     """Store file content in memory for serverless environments"""
     file_storage[filename] = file_content
+    print(f"Stored file {filename} in memory ({len(file_content)} bytes)")  # Debug log
 
 
 
