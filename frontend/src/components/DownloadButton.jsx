@@ -3,9 +3,14 @@ import React from 'react'
 export default function DownloadButton({ filename }) {
   const onDownload = () => {
     if (!filename) return
-    // Vite proxy will map /api → backend
+    // Create a temporary link element for download
     const url = `/api/download/${encodeURIComponent(filename)}`
-    window.location.href = url
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
