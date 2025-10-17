@@ -1,2 +1,0 @@
-# Minimal requirements for basic functionality
-# Will add more dependencies once basic handler works

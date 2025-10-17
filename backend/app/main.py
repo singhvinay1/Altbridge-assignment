@@ -17,7 +17,13 @@ frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_origin, "*"],
+    allow_origins=[
+        frontend_origin, 
+        "http://localhost:5173",
+        "http://localhost:5174", 
+        "https://*.vercel.app",
+        "https://altbridge-assignment.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
