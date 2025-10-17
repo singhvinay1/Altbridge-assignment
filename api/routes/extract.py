@@ -3,10 +3,10 @@ from fastapi.responses import JSONResponse
 from typing import List
 import os
 import time
-from ..services.pdf_extractor import extract_text_from_pdf
-from ..services.llm_extract import extract_structured_data
-from ..services.excel_writer import write_excel
-from ..services.templates import load_template
+from services.pdf_extractor import extract_text_from_pdf
+from services.llm_extract import extract_structured_data
+from services.excel_writer import write_excel
+from services.templates import load_template
 
 router = APIRouter()
 

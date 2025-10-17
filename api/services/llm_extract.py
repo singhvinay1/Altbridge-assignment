@@ -3,7 +3,7 @@ import json
 import re
 from tenacity import retry, stop_after_attempt, wait_fixed
 from .templates import get_template_field_order, get_all_template_fields
-from ..settings import is_mock_llm_enabled, get_openai_api_key
+from settings import is_mock_llm_enabled, get_openai_api_key
 import os
 
 

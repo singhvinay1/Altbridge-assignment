@@ -2,8 +2,8 @@ import json
 import os
 import re
 from typing import Any, Dict, List, Optional
-import pandas as pd
-from ..settings import get_templates_dir
+from openpyxl import load_workbook
+from settings import get_templates_dir
 
 
 def slugify_to_key(text: str) -> str:
@@ -86,8 +86,10 @@ def _load_template_json(path: str) -> Dict[str, Any]:
 
 def _load_template_xlsx(path: str, template_id: str) -> Dict[str, Any]:
     # Read first sheet headers as the template columns
-    df = pd.read_excel(path, sheet_name=0, nrows=0)
-    headers: List[str] = [str(h) for h in df.columns.tolist()]
+    wb = load_workbook(path, read_only=True)
+    ws = wb.active
+    headers: List[str] = [str(cell.value) for cell in ws[1] if cell.value is not None]
+    wb.close()
     fields = [{"key": slugify_to_key(h), "header": h} for h in headers]
     return {
         "templateId": template_id,
