@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import UploadComponent from './components/UploadComponent.jsx'
-import TemplateSelector from './components/TemplateSelector.jsx'
-import ProgressBar from './components/ProgressBar.jsx'
-import DownloadButton from './components/DownloadButton.jsx'
-import api from './lib/api.js'
+import UploadComponent from './components/UploadComponent'
+import TemplateSelector from './components/TemplateSelector'
+import ProgressBar from './components/ProgressBar'
+import DownloadButton from './components/DownloadButton'
+import api from './lib/api'
 
 export default function App() {
   const [files, setFiles] = useState([])
