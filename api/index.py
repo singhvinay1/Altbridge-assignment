@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.extract import router as extract_router
 from app.routes.download import router as download_router
+from mangum import Mangum
 
 app = FastAPI(title="PDF Data Extraction API", version="1.0.0")
 
@@ -31,5 +32,5 @@ app.include_router(download_router, prefix="/api")
 async def health_check():
     return {"status": "ok"}
 
-# For Vercel serverless
-handler = app
+# For Vercel serverless - use Mangum adapter
+handler = Mangum(app)
