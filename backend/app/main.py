@@ -28,9 +28,13 @@ app.add_middleware(
 async def health():
     return {"status": "ok"}
 
+@app.get("/api/health")
+async def api_health():
+    return {"status": "ok"}
 
-app.include_router(extract_route.router, prefix="")
-app.include_router(download_route.router, prefix="")
+
+app.include_router(extract_route.router, prefix="/api")
+app.include_router(download_route.router, prefix="/api")
 
 
 
