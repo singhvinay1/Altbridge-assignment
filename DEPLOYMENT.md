@@ -1,137 +1,161 @@
 # Vercel Deployment Guide
 
-This guide will help you deploy your PDF Data Extraction Tool to Vercel.
+This guide will help you deploy the PDF Data Extraction Tool to Vercel.
 
 ## Prerequisites
 
-1. **GitHub Repository**: Your code should be pushed to GitHub
-2. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
-3. **Google AI API Key**: For the data extraction functionality
+1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
+2. **GitHub Repository**: Push your code to GitHub
+3. **Google AI API Key**: For the backend functionality
 
-## Deployment Steps
+## Step-by-Step Deployment
 
-### 1. Connect GitHub to Vercel
+### 1. Prepare Your Repository
 
-1. Go to [vercel.com](https://vercel.com) and sign in
-2. Click "New Project"
-3. Import your GitHub repository
-4. Select your repository from the list
-
-### 2. Configure Environment Variables
-
-In the Vercel dashboard, go to your project settings and add these environment variables:
-
+Make sure your code is pushed to GitHub with the following structure:
 ```
-GOOGLE_API_KEY=your_google_ai_api_key_here
-FRONTEND_ORIGIN=https://your-app-name.vercel.app
+Altbridge-assignment/
+├── frontend/          # React app
+├── backend/           # FastAPI app
+├── templates/         # Extraction templates
+├── vercel.json        # Vercel configuration
+└── .vercelignore      # Files to ignore
 ```
 
-**Important**: Replace `your_google_ai_api_key_here` with your actual Google AI API key and `your-app-name` with your actual Vercel app name.
+### 2. Deploy to Vercel
 
-### 3. Configure Build Settings
+#### Option A: Deploy via Vercel CLI
 
-Vercel should automatically detect the configuration from `vercel.json`, but verify these settings:
+1. **Install Vercel CLI**:
+   ```bash
+   npm i -g vercel
+   ```
 
-- **Framework Preset**: Other
-- **Root Directory**: Leave empty (uses root)
-- **Build Command**: `cd frontend && npm run build`
-- **Output Directory**: `frontend/dist`
+2. **Login to Vercel**:
+   ```bash
+   vercel login
+   ```
 
-### 4. Deploy
+3. **Deploy from project root**:
+   ```bash
+   vercel
+   ```
 
-1. Click "Deploy" in the Vercel dashboard
-2. Wait for the deployment to complete
-3. Your app will be available at `https://your-app-name.vercel.app`
+4. **Follow the prompts**:
+   - Link to existing project or create new
+   - Set up project settings
+   - Deploy
+
+#### Option B: Deploy via Vercel Dashboard
+
+1. **Go to [vercel.com/dashboard](https://vercel.com/dashboard)**
+2. **Click "New Project"**
+3. **Import your GitHub repository**
+4. **Configure project settings**:
+   - Framework Preset: `Other`
+   - Root Directory: `./` (project root)
+   - Build Command: `cd frontend && npm run build`
+   - Output Directory: `frontend/dist`
+
+### 3. Configure Environment Variables
+
+In your Vercel project dashboard:
+
+1. **Go to Settings → Environment Variables**
+2. **Add the following variables**:
+
+   | Name | Value | Environment |
+   |------|-------|-------------|
+   | `GOOGLE_API_KEY` | Your Google AI API key | Production, Preview, Development |
+   | `FRONTEND_ORIGIN` | `https://your-app-name.vercel.app` | Production, Preview, Development |
+
+### 4. Update CORS Settings
+
+After deployment, update the `FRONTEND_ORIGIN` in your backend settings to match your Vercel domain.
+
+### 5. Test Your Deployment
+
+1. **Visit your deployed app**: `https://your-app-name.vercel.app`
+2. **Test the API**: `https://your-app-name.vercel.app/api/health`
+3. **Upload a sample PDF** and test extraction
 
 ## Project Structure for Vercel
 
+The deployment uses this structure:
+
 ```
-Altbridge-assignment/
-├── api/                    # Vercel serverless functions
-│   ├── index.py           # Main FastAPI app with Mangum handler
-│   ├── routes/            # API routes
-│   ├── services/          # Business logic
-│   ├── templates/         # Extraction templates
-│   └── requirements.txt   # Python dependencies
-├── frontend/              # React frontend
-│   ├── src/
-│   ├── package.json
-│   └── vite.config.js
-├── vercel.json           # Vercel configuration
-└── DEPLOYMENT.md         # This file
+/ (root)
+├── frontend/          # Static React build
+│   ├── dist/         # Built frontend (generated)
+│   └── vercel.json   # Frontend config
+├── backend/
+│   └── api/          # Serverless functions
+│       ├── index.py  # Main API handler
+│       └── requirements.txt
+├── templates/        # Shared templates
+└── vercel.json       # Main Vercel config
 ```
 
-## Key Changes Made for Vercel
+## API Endpoints
 
-1. **API Structure**: Created `/api` directory with Vercel-compatible FastAPI setup
-2. **Mangum Handler**: Added Mangum to convert FastAPI to AWS Lambda/Vercel format
-3. **Routing**: Updated `vercel.json` to route `/api/*` to Python functions
-4. **Frontend**: Updated API calls to use `/api` prefix
-5. **Environment Variables**: Configured for Vercel deployment
+After deployment, your API will be available at:
+
+- **Health Check**: `https://your-app.vercel.app/api/health`
+- **Extract Data**: `https://your-app.vercel.app/api/extract`
+- **Download Files**: `https://your-app.vercel.app/api/download/{filename}`
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Environment Variables Not Working**
-   - Ensure variables are set in Vercel dashboard
-   - Check variable names match exactly (case-sensitive)
-   - Redeploy after adding variables
+1. **Build Failures**:
+   - Check that all dependencies are in `package.json`
+   - Ensure build commands are correct
+   - Check Vercel build logs
 
-2. **API Routes Not Working**
-   - Verify `vercel.json` configuration
-   - Check that `/api/index.py` exists
-   - Ensure `mangum` is in requirements.txt
+2. **API Not Working**:
+   - Verify environment variables are set
+   - Check CORS configuration
+   - Ensure Google API key is valid
 
-3. **Build Failures**
-   - Check that all dependencies are in `package.json` and `requirements.txt`
-   - Verify Python version compatibility
-   - Check build logs in Vercel dashboard
+3. **File Upload Issues**:
+   - Check file size limits (Vercel has 4.5MB limit for serverless)
+   - Verify multipart form handling
 
-4. **CORS Issues**
-   - Update `FRONTEND_ORIGIN` environment variable
-   - Ensure it matches your actual Vercel domain
+### File Size Limitations
 
-### File Size Limits
+- **Vercel Serverless**: 4.5MB request limit
+- **Vercel Pro**: 4.5MB request limit
+- **Vercel Enterprise**: 4.5MB request limit
 
-- Vercel has a 50MB limit for serverless functions
-- PDF files are processed in memory, so large files might cause issues
-- Consider implementing file size validation
+For larger files, consider:
+- Using Vercel Blob for file storage
+- Implementing chunked uploads
+- Using external file storage (AWS S3, etc.)
 
-### Function Timeout
+## Custom Domain (Optional)
 
-- Default timeout is 10 seconds for Hobby plan
-- Increased to 30 seconds in `vercel.json`
-- For Pro plan, can be increased to 60 seconds
-
-## Local Development
-
-To test the Vercel setup locally:
-
-1. Install Vercel CLI: `npm i -g vercel`
-2. Run: `vercel dev`
-3. Your app will be available at `http://localhost:3000`
+1. **Go to Project Settings → Domains**
+2. **Add your custom domain**
+3. **Configure DNS records** as instructed
+4. **Update environment variables** with new domain
 
 ## Monitoring
 
-- Check Vercel dashboard for deployment status
-- Monitor function logs for errors
-- Use Vercel Analytics for performance insights
+- **Vercel Analytics**: Built-in performance monitoring
+- **Function Logs**: Check serverless function logs
+- **Error Tracking**: Monitor API errors
+
+## Cost Considerations
+
+- **Hobby Plan**: Free tier with limitations
+- **Pro Plan**: $20/month for higher limits
+- **Enterprise**: Custom pricing
+
+Check [Vercel Pricing](https://vercel.com/pricing) for current details.
 
 ## Support
 
-If you encounter issues:
-
-1. Check Vercel deployment logs
-2. Verify environment variables
-3. Test API endpoints individually
-4. Check browser console for frontend errors
-
-## Next Steps
-
-After successful deployment:
-
-1. Test all functionality with sample PDFs
-2. Set up custom domain (optional)
-3. Configure monitoring and alerts
-4. Set up CI/CD for automatic deployments
+- **Vercel Documentation**: [vercel.com/docs](https://vercel.com/docs)
+- **Community**: [github.com/vercel/vercel/discussions](https://github.com/vercel/vercel/discussions)
+- **Support**: Available for Pro/Enterprise plans
