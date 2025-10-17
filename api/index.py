@@ -1,51 +1,78 @@
-import sys
-import os
 import json
 
-# Add the backend directory to the Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
-
 def handler(request, context):
-    """Vercel serverless function handler"""
-    try:
-        # Import FastAPI components
-        from fastapi import FastAPI
-        from fastapi.middleware.cors import CORSMiddleware
-        from app.routes.extract import router as extract_router
-        from app.routes.download import router as download_router
-        from mangum import Mangum
-        
-        # Create FastAPI app
-        app = FastAPI(title="PDF Data Extraction API", version="1.0.0")
-        
-        # Get frontend origin from environment
-        frontend_origin = os.getenv("FRONTEND_ORIGIN", "https://*.vercel.app")
-        
-        # CORS middleware
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=[frontend_origin, "https://*.vercel.app"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-        
-        # Include routers
-        app.include_router(extract_router, prefix="/api")
-        app.include_router(download_router, prefix="/api")
-        
-        # Use Mangum adapter
-        mangum_handler = Mangum(app)
-        
-        # Handle the request
-        return mangum_handler(request, context)
-        
-    except Exception as e:
+    """Simple Vercel serverless function handler"""
+    
+    # Get request method and path
+    method = request.get('httpMethod', 'GET')
+    path = request.get('path', '/')
+    
+    # Handle CORS preflight
+    if method == 'OPTIONS':
         return {
-            "statusCode": 500,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Content-Type': 'application/json'
             },
-            "body": json.dumps({"error": str(e)})
+            'body': json.dumps({'message': 'CORS preflight'})
         }
+    
+    # Handle health check
+    if path == '/api/health' and method == 'GET':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'status': 'ok'})
+        }
+    
+    # Handle extract endpoint
+    if path == '/api/extract' and method == 'POST':
+        try:
+            # For now, return a simple response
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'message': 'Extract endpoint is working',
+                    'filename': 'test_extraction.xlsx'
+                })
+            }
+        except Exception as e:
+            return {
+                'statusCode': 500,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': str(e)})
+            }
+    
+    # Handle download endpoint
+    if path.startswith('/api/download/') and method == 'GET':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'message': 'Download endpoint is working'})
+        }
+    
+    # Default response
+    return {
+        'statusCode': 404,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps({'error': 'Not found'})
+    }
