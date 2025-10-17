@@ -1,13 +1,14 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from typing import List
 import os
 import time
+import io
+import base64
 from ..services.pdf_extractor import extract_text_from_pdf
 from ..services.llm_extract import extract_structured_data
 from ..services.excel_writer import write_excel
 from ..services.templates import load_template
-from .download import store_file_in_memory
 
 router = APIRouter()
 
@@ -37,9 +38,14 @@ async def extract(files: List[UploadFile] = File(...), template_id: str = Form(.
 
     filename, file_content = write_excel(rows, template)
     
-    # Store file in memory for serverless environments
-    store_file_in_memory(filename, file_content)
+    # For serverless environments, return the file directly as base64
+    # This ensures the file is available immediately without storage issues
+    file_base64 = base64.b64encode(file_content).decode('utf-8')
     
-    return JSONResponse({"filename": filename})
+    return JSONResponse({
+        "filename": filename,
+        "file_data": file_base64,
+        "message": "Extraction complete. File ready for download."
+    })
 
 

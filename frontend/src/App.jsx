@@ -12,6 +12,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [resultFilename, setResultFilename] = useState('')
   const [message, setMessage] = useState('')
+  const [fileData, setFileData] = useState('')
 
   const onExtract = async () => {
     if (!files.length) return
@@ -35,6 +36,7 @@ export default function App() {
       })
       setProgress(80)
       setResultFilename(res.data.filename)
+      setFileData(res.data.file_data)
       setMessage('Extraction complete. Ready to download.')
       setProgress(100)
     } catch (e) {
@@ -89,7 +91,7 @@ export default function App() {
         <ProgressBar progress={progress} />
       </div>
       <div className="card">
-        <DownloadButton filename={resultFilename} />
+        <DownloadButton filename={resultFilename} fileData={fileData} />
       </div>
     </div>
   )
