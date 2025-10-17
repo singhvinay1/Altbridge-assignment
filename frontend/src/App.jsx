@@ -3,7 +3,7 @@ import UploadComponent from './components/UploadComponent'
 import TemplateSelector from './components/TemplateSelector'
 import ProgressBar from './components/ProgressBar'
 import DownloadButton from './components/DownloadButton'
-import api from './lib/api'
+import api from '/src/lib/api.js'
 
 export default function App() {
   const [files, setFiles] = useState([])
